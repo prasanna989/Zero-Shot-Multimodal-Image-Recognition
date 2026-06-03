@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZERO Shot Recognition | Neural Visual Intelligence</title>
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+        /* Base Styles */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        /* --- DARK MODE STYLES --- */
+        .dark body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .dark #bgCanvas {
+            background: #0f172a;
+            filter: invert(1) hue-rotate(180deg) brightness(0.6);
+        }
+
+        .dark .navbar {
+            background: rgba(15, 23, 42, 0.9);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .dark .nav-link { color: #94a3b8; }
+        .dark .nav-link:hover { color: #3b82f6; background: rgba(255,255,255,0.05); }
+        .dark .nav-link.active { color: #fff; background: #2563eb; }
+
+        /* --- DARK MODE FONT COLORS FIX --- */
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark .box-heading {
+            color: #f1f5f9 !important; /* Fixing the dark blue text visibility */
+        }
+        
+        .dark .text-slate-900, .dark .text-slate-800 {
+            color: #f8fafc !important;
+        }
+
+        .dark .text-slate-600, .dark .text-slate-400, .dark p {
+            color: #cbd5e1 !important;
+        }
+
+        /* --- DARK MODE VISIBILITY FIX FOR PROFILE CARDS --- */
+        .dark .detail-bio .text-slate-800 {
+            color: #1e293b !important; /* Darker text for light background in dark mode */
+        }
+        .dark .detail-bio .text-slate-500 {
+            color: #475569 !important; /* Darker label text for light background in dark mode */
+        }
+
+
+        /* --- HOVER FIX FOR DARK MODE --- */
+        .dark .tab-card, .dark .pillar-card, .dark .insight-card {
+            background: rgba(30, 41, 59, 0.8) !important;
+            border-color: rgba(255,255,255,0.1) !important;
+            color: #f8fafc !important;
+        }
+        
+        /* Cursor hover fix: Ensure nothing turns white in dark mode */
+        .dark .tab-card:hover, .dark .pillar-card:hover, .dark .insight-card:hover {
+            background: #1e293b !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* --- INNOVATIVE CLICK-STYLE MODE TOGGLE --- */
+        #themeToggle {
+            width: 48px;
+            height: 48px;
+            background: #fff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            margin-left: 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            z-index: 1001;
+        }
+        #themeToggle:active { transform: scale(0.9); }
+        #themeToggle:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        
+        .dark #themeToggle {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.1);
+            color: #fbbf24;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .toggle-icon-wrap {
+            font-size: 20px;
+            transition: all 0.5s ease;
+        }
+
+        /* --- NEW CINEMATIC "CURTAIN" SLIDE TRANSITION --- */
+        #modeTransitionOverlay {
+            position: fixed;
+            top: 0; right: 0; 
+            width: 0; height: 100vh;
+            pointer-events: none; z-index: 10000;
+            background: #0f172a;
+            transition: width 0.7s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #modeTransitionOverlay.active { 
+            width: 100vw; 
+            left: auto;
+            right: 0;
+        }
+        #modeTransitionOverlay.exiting { 
+            width: 0;
+            left: 0;
+            right: auto;
+        }
+
+        /* --- ENTRANCE CINEMATIC OVERLAY --- */
+        #entranceOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), visibility 1s;
+        }
+
+        .entrance-text {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            opacity: 0;
+            transform: scale(0.8);
+            filter: blur(20px);
+            animation: entrance-reveal 1.8s cubic-bezier(0.23, 1, 0.32, 1) forwards 0.3s;
+            background: linear-gradient(135deg, #fff 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .entrance-subtext {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8em;
+            margin-top: 25px;
+            color: rgba(255, 255, 255, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade-in-up 1.2s ease forwards 0.8s;
+        }
+
+        .entrance-line {
+            position: absolute;
+            width: 1px;
+            height: 0;
+            background: linear-gradient(to bottom, transparent, #2563eb, transparent);
+            opacity: 0.5;
+            animation: line-grow 2s ease-in-out infinite;
+        }
+
+        @keyframes entrance-reveal {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); filter: blur(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+
+        @keyframes line-grow {
+            0% { height: 0; top: 0; opacity: 0; }
+            50% { height: 100%; top: 0; opacity: 0.5; }
+            100% { height: 0; top: 100%; opacity: 0; }
+        }
+
+        /* --- LIVE CONTINUOUS NEURAL BACKGROUND --- */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: #f8fafc;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 60px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 8px; }
+        .logo-box {
+            width: 40px; height: 40px; background: #2563eb; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .title-sub { font-size: 16px; color: #2563eb; font-weight: bold; }
+        .nav-center { display: flex; justify-content: center; gap: 15px; }
+        .nav-link {
+            cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.3s ease;
+            font-size: 14px; padding: 8px 22px; border-radius: 999px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-link:hover { color: #2563eb; background: #f1f5f9; }
+        .nav-link.active { color: #2563eb; background: #ebf2ff; }
+
+        /* --- TAB EMOJI ANIMATION --- */
+        .tab-emoji {
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .nav-link:hover .tab-emoji {
+            animation: bounceEmoji 0.6s infinite alternate;
+        }
+        @keyframes bounceEmoji {
+            from { transform: translateY(0) scale(1.1); }
+            to { transform: translateY(-4px) scale(1.2); }
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            align-items: center;
+            padding: 60px 100px;
+            position: relative;
+            background: linear-gradient(-45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+            overflow: hidden;
+            min-height: 80vh;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -100px; left: -100px;
+            animation: float 20s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        .hero-left, .hero-right { position: relative; z-index: 2; }
+        
+        /* --- HIGH IMPACT HERO TITLE ANIMATION (BLACK WITH MEDIUM WHITE SHINE) --- */
+        .hero-left h2 { 
+            font-size: 48px; 
+            font-weight: 800; 
+            margin-bottom: 20px; 
+            color: #000; 
+            opacity: 0; 
+            background: linear-gradient(120deg, #000 45%, rgba(255, 255, 255, 0.5) 50%, #000 55%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pop-in 800ms ease forwards, shineText 3.5s linear infinite;
+        }
+
+        @keyframes shineText {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .hero-left p { color: rgba(255,255,255,0.95); margin-bottom: 25px; line-height: 1.6; font-size: 16px; opacity: 0; animation: pop-in 600ms ease forwards 200ms; }
+        .hero-left ul { list-style: none; padding: 0; margin-bottom: 30px; }
+        .hero-left li { margin-bottom: 12px; color: #fff; font-weight: 500; display: flex; align-items: center; gap: 10px; opacity: 0; animation: pop-in 600ms ease forwards; }
+        .hero-left li::before { content: "✔"; color: #fff; font-weight: bold; }
+
+        .upload-zone {
+            margin-top: 20px; padding: 50px 20px; border: 2px dashed rgba(255,255,255,0.5);
+            border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.4s ease;
+            background: rgba(255,255,255,0.1); position: relative; opacity: 0; animation: pop-in 600ms ease forwards 700ms;
+        }
+        .upload-zone:hover, .upload-zone.dragover { background: rgba(255,255,255,0.2); border-color: #fff; transform: scale(1.01); }
+
+        .params-section { margin-top: 25px; opacity: 0; animation: pop-in 600ms ease forwards 800ms; display: flex; flex-direction: column; gap: 15px; }
+        .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .param-group label { color: #fff; font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block; }
+
+        .param-select, .param-input {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.95); color: #1e293b; font-size: 14px; outline: none;
+        }
+        
+        .btn-predict {
+            background: #fbbf24; color: #000; padding: 14px; border-radius: 8px;
+            font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 12px rgba(251,191,36,0.3); border: none; cursor: pointer;
+        }
+
+        .btn-predict { position: relative; overflow: hidden; }
+        .btn-predict .btn-text { position: relative; z-index: 10; }
+        .btn-predict .progress-fill {
+            position: absolute; top: 0; left: 0; height: 100%; width: 0%;
+            background: linear-gradient(90deg, #d97706, #fbbf24); /* Amber gradient */
+            opacity: 0.5; z-index: 1; transition: width 0.3s ease;
+        }
+        .btn-predict.loading {
+            background: #334155; color: #94a3b8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .btn-predict.success {
+            background: #10b981; color: white;
+            animation: successPulse 1.5s infinite;
+        }
+        @keyframes successPulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* --- CINEMATIC RESULT MODAL STYLES --- */
+        #resultsOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            padding: 40px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(100%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease, visibility 0.6s;
+        }
+
+        #resultsOverlay.active { opacity: 1; visibility: visible; transform: translateY(0); }
+
+        .results-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        #resultsOverlay.active .results-box { transform: scale(1); }
+
+        .result-scan-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: #3b82f6;
+            box-shadow: 0 0 15px #3b82f6;
+            animation: scanLoop 4s linear infinite;
+        }
+
+        @keyframes scanLoop {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .confidence-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            width: 0%;
+            transition: width 1.5s ease-out 0.5s;
+        }
+
+        .close-results {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: white;
+            color: #0f172a;
+            border-radius: 999px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .close-results:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,255,255,0.2); }
+
+        /* SPICY CARDS */
+        .tabs-container { padding: 60px 100px; }
+        
+        .tab-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            border-color: #2563eb;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12), 0 0 20px rgba(255,255,255,0.8);
+        }
+
+        /* SCOPE */
+        .scope-item { align-items: center; }
+        .scope-item .item-icon {
+            width: 120px !important; height: 120px !important; border-radius: 16px !important;
+            flex-shrink: 0; background: #f8fafc; display: flex !important; align-items: center; 
+            justify-content: center; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .scope-item .item-icon img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .scope-item:nth-child(even) { flex-direction: row-reverse; }
+
+        /* APPLICATIONS & PARALLAX EFFECT */
+        .app-item { 
+            flex-direction: column; 
+            align-items: stretch; 
+            padding: 0 !important; 
+            text-align: left;
+            overflow: hidden;
+        }
+        
+        .large-banner-img { 
+            width: 100%; 
+            height: 480px; 
+            object-fit: cover; 
+            border-radius: 0 0 16px 16px; 
+            transition: transform 0.1s ease-out; 
+            will-change: transform;
+            transform: scale(1.1);
+        }
+
+        .item-content { padding: 30px 40px; width: 100%; }
+        .box-heading { font-weight: 900; text-transform: uppercase; font-size: 2rem; margin-bottom: 10px; letter-spacing: -0.05em; line-height: 1; }
+        .technical-matter { line-height: 1.6; color: #475569; margin-top: 10px; }
+
+        /* TECHNICAL / ABOUT */
+        .arch-engine-card { flex-direction: column; padding: 35px; border-top: 8px solid #2563eb; }
+        .arch-image { width: 100%; height: 200px; object-fit: cover; border-radius: 16px; margin-bottom: 25px; }
+
+        .neural-step { position: relative; padding-left: 70px; margin-bottom: 40px; }
+        .neural-step::before { content: ""; position: absolute; left: 24px; top: 0; height: 100%; width: 2px; background: rgba(0,0,0,0.05); }
+        .neural-step:last-child::before { display: none; }
+        .step-blob {
+            position: absolute; left: 0; top: 0; width: 50px; height: 50px; background: #2563eb; 
+            color: white; border-radius: 18px; display: flex; align-items: center; justify-content: center; 
+            font-weight: 800; font-size: 20px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .vertical-stack { display: flex; flex-direction: column; gap: 24px; width: 100%; }
+        .insight-card { 
+            padding: 30px; background: #fff; border-radius: 20px; 
+            border-left: 8px solid #2563eb; transition: all 0.3s ease; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+        .insight-card:hover { transform: translateX(12px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+        /* --- TEAM INTRO CINEMATIC TRANSITION --- */
+        #teamIntroOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(25px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+            transition: opacity 0.6s ease;
+        }
+
+        .cinematic-border {
+            position: absolute;
+            left: 0; width: 100%; height: 12vh;
+            background: #000;
+            z-index: 5010;
+            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .cinematic-border.top { top: 0; transform: translateY(-100%); }
+        .cinematic-border.bottom { bottom: 0; transform: translateY(100%); }
+        #teamIntroOverlay.active .cinematic-border.top { transform: translateY(0); }
+        #teamIntroOverlay.active .cinematic-border.bottom { transform: translateY(0); }
+
+        .intro-text-large {
+            font-size: 6rem;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: -0.04em;
+            line-height: 0.85;
+            opacity: 0;
+            transform: scale(0.7);
+            z-index: 5020;
+        }
+
+        #teamIntroOverlay.active .intro-text-large {
+            animation: intro-zoom 1.4s cubic-bezier(0.23, 1, 0.32, 1) forwards 0.2s;
+        }
+
+        .intro-text-sub {
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6em;
+            margin-top: 30px;
+            color: #3b82f6;
+            font-weight: 800;
+            opacity: 0;
+            z-index: 5020;
+        }
+        #teamIntroOverlay.active .intro-text-sub {
+            animation: fade-in-up 1.2s ease forwards 0.6s;
+        }
+
+        .scanline {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: rgba(37, 99, 235, 0.3);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+            z-index: 5015;
+            opacity: 0;
+        }
+        #teamIntroOverlay.active .scanline {
+            animation: scan 1.8s linear forwards;
+        }
+
+        @keyframes intro-zoom {
+            0% { opacity: 0; transform: scale(0.6) translateY(20px); filter: blur(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scan {
+            0% { top: 0; opacity: 1; }
+            100% { top: 100%; opacity: 1; }
+        }
+
+        /* --- FULL SCREEN GLASS FOCUS TEAM INTERACTION --- */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+            position: relative;
+            min-height: 500px;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .team-member-card { 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            padding: 24px !important;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            position: static; 
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Hide full name on the card itself */
+        .team-member-card .full-name { display: none; }
+
+        .tab-panel[data-panel="team"].has-active .team-member-card:not(.active),
+        .tab-panel[data-panel="team"].has-active .engineering-pillars-section {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            filter: blur(12px);
+        }
+
+        .member-img-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .team-member-card.active .member-img-wrapper {
+            opacity: 0;
+            transform: scale(1.2);
+        }
+
+        .member-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        .member-details-overlay {
+            position: fixed; 
+            top: 180px; 
+            left: 50%;
+            transform: translate(-50%, 0) scale(0.85); 
+            width: 1100px; 
+            max-width: 95vw;
+            height: 480px;
+            max-height: 70vh; 
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(45px) saturate(180%);
+            -webkit-backdrop-filter: blur(45px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50px;
+            padding: 50px;
+            display: flex;
+            flex-direction: row; 
+            align-items: center;
+            gap: 60px;
+            box-shadow: 0 50px 150px rgba(0,0,0,0.15);
+            z-index: 2000; 
+        }
+
+        .team-member-card.active .member-details-overlay {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0) scale(1);
+            pointer-events: auto;
+        }
+
+        .overlay-img-side {
+            width: 360px;
+            height: 360px;
+            flex-shrink: 0;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+            border: 3px solid rgba(255,255,255,0.7);
+        }
+        .overlay-img-side img { width: 100%; height: 100%; object-fit: cover; }
+
+        .overlay-info-side {
+            flex: 1;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .overlay-info-side h3 {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 5px;
+            letter-spacing: -0.05em;
+        }
+
+        .detail-bio {
+            font-size: 18px;
+            color: #334155;
+            line-height: 1.8;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        /* CINEMATIC TEAM TITLE */
+        .team-title-cinematic {
+            font-size: 4.5rem;
+            font-weight: 950;
+            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: 0.15em;
+            margin-bottom: 6rem;
+            background: linear-gradient(90deg, #1e293b 0%, #2563eb 50%, #1e293b 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .tab-panel[data-panel="team"].visible .team-title-cinematic {
+            animation: cinematic-reveal 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards 0.3s,
+                       gradient-flow 4s linear infinite;
+        }
+
+        @keyframes cinematic-reveal {
+            0% { opacity: 0; transform: scale(0.9) translateY(20px); filter: blur(15px); letter-spacing: 0.4em; }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); letter-spacing: 0.15em; }
+        }
+
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .pillar-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        .pillar-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(37, 99, 235, 0.5);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .engineering-pillars-section { transition: all 0.5s ease; }
+
+        /* Tabs Visibility */
+        .tab-panel { display: none; max-width: 1200px; margin: 0 auto; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; }
+        .tab-panel.visible { display: block; opacity: 1; transform: translateY(0); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes pop-in { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; padding: 40px 20px; }
+            .hero-right { display: none; }
+            .navbar { padding: 15px 20px; }
+            .tabs-container { padding: 30px 20px; }
+            .team-grid { grid-template-columns: repeat(2, 1fr); }
+            .team-title-cinematic { font-size: 2.5rem; letter-spacing: 0.1em; }
+            .member-details-overlay { 
+                flex-direction: column; 
+                width: 96vw; 
+                height: auto; 
+                padding: 40px 30px; 
+                text-align: center;
+                gap: 30px;
+                top: 150px;
+            }
+            .overlay-img-side { width: 220px; height: 220px; }
+            .overlay-info-side { text-align: center; }
+            .overlay-info-side h3 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cinematic Right-Side Curtain Mode Transition Overlay -->
+    <div id="modeTransitionOverlay"></div>
+
+    <!-- Results Cinematic Overlay -->
+    <div id="resultsOverlay">
+        <div class="results-box">
+            <div class="result-scan-line"></div>
+            
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                <h2 class="text-3xl font-black text-blue-400 tracking-widest uppercase" style="font-family: 'Segoe UI', sans-serif;">ANALYSIS REPORT</h2>
+                <button id="newScanBtn" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-bold text-sm transition-all border border-slate-600 shadow-lg hover:shadow-blue-500/20">NEW SCAN</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Visual Column -->
+                <div class="flex flex-col gap-4">
+                    <div class="relative w-full h-80 bg-slate-800 rounded-2xl overflow-hidden border-2 border-slate-700 shadow-inner group">
+                        <img id="result-img" src="" alt="Analyzed Image" class="w-full h-full object-contain z-10 relative">
+                        <img id="heatmap-overlay" src="" class="absolute inset-0 w-full h-full object-contain opacity-0 transition-opacity duration-300 z-20 mix-blend-screen hidden">
+                    </div>
+                    <button id="toggle-heatmap" class="w-full py-3 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded-xl font-bold tracking-wider transition-all uppercase text-sm flex items-center justify-center gap-2">
+                        <span>👁‍🗨</span> SHOW X-RAY (HEATMAP)
+                    </button>
+                </div>
+
+                <!-- Data Column -->
+                <div class="flex flex-col h-full">
+                    <h3 class="text-slate-400 font-bold text-sm tracking-widest mb-4 uppercase">TOP PREDICTIONS</h3>
+                    <div id="predictions-list" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <div class="mt-4 p-6 bg-gradient-to-r from-blue-900/40 to-slate-900/40 border border-blue-500/30 rounded-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-2 opacity-20 text-6xl">🎯</div>
+                        <h4 class="text-blue-400 font-bold text-xs tracking-widest uppercase mb-2">PRIMARY DETECTION</h4>
+                        <h1 id="top-label" class="text-3xl md:text-4xl font-black text-white tracking-tight uppercase truncate">...</h1>
+                        <div class="mt-3 flex items-center gap-3">
+                            <div class="h-3 w-full bg-slate-700 rounded-full overflow-hidden border border-slate-600">
+                                <div id="confidence-bar-fill" class="h-full bg-emerald-400 w-0 transition-all duration-1000 shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                            </div>
+                            <span id="confidence-text" class="text-emerald-400 font-mono font-bold text-lg">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initial Site Entrance Overlay -->
+    <div id="entranceOverlay">
+        <div class="entrance-line" style="left: 20%;"></div>
+        <div class="entrance-line" style="left: 40%;"></div>
+        <div class="entrance-line" style="left: 60%;"></div>
+        <div class="entrance-line" style="left: 80%;"></div>
+        <h1 class="entrance-text">Welcome to <br>Zero Shot Image Recognition</h1>
+        <p class="entrance-subtext">AI That Recognizes What It Has Never Seen</p>
+    </div>
+
+    <!-- Cinematic Team Intro Transition Overlay -->
+    <div id="teamIntroOverlay">
+        <div class="cinematic-border top"></div>
+        <div class="cinematic-border bottom"></div>
+        <div class="scanline"></div>
+        <h1 class="intro-text-large">INTRODUCING<br>OUR TEAM</h1>
+        <p class="intro-text-sub">ZERO Shot & Design Architects</p>
+    </div>
+
+    <!-- Interactive Neural Canvas -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="logo-box">ZERO</div>
+            <div class="title-sub">Visual Intelligence</div>
+        </div>
+        <div class="nav-center">
+            <span class="nav-link active" data-tab="home">
+                <span class="tab-emoji">🏠</span> Home
+            </span>
+            <span class="nav-link" data-tab="scope">
+                <span class="tab-emoji">🔭</span> Scope
+            </span>
+            <span class="nav-link" data-tab="applications">
+                <span class="tab-emoji">🚀</span> Applications
+            </span>
+            <span class="nav-link" data-tab="about">
+                <span class="tab-emoji">⚙️</span> Technical
+            </span>
+            <span class="nav-link" data-tab="team">
+                <span class="tab-emoji">👥</span> Team
+            </span>
+        </div>
+        <div class="flex items-center">
+            <!-- CLICK-STYLE INNOVATIVE TOGGLE -->
+            <div id="themeToggle" title="Switch Theme Mode">
+                <div class="toggle-icon-wrap" id="toggleIcon">🌙</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero / Dashboard -->
+    <section class="hero" id="heroSection">
+        <div class="hero-left">
+            <h2>Next-Gen ZERO Shot <br>Recognition Intelligence</h2>
+            <p>Empowering industries with the dual force of ESRGAN pixel synthesis and CLIP semantic alignment. Recognize unseen visual concepts with instant precision.</p>
+
+            <ul>
+                <li>Super-resolution via RRDB Generative Blocks</li>
+                <li>Contrastive Image-Language Foundation</li>
+                <li>Zero Task-Specific Retraining Overheads</li>
+            </ul>
+
+            <div class="upload-zone" id="uploadZone">
+                <div class="text-white text-3xl mb-2" id="uploadIcon">📁</div>
+                <h4 class="text-white font-bold" id="uploadStatus">Neural Core: Drag Image to Analyze</h4>
+                <input type="file" id="imageInput" accept="image/*" style="display:none;">
+            </div>
+
+            <div class="params-section">
+                <div class="params-grid">
+                    <div class="param-group">
+                        <label>Generative Upscaling</label>
+                        <select id="enhancementSelect" class="param-select">
+                            <option value="esrgan">Real-ESRGAN (4x)</option>
+                            <option value="none">Standard (No Enhancement)</option>
+                        </select>
+                    </div>
+                    <div class="param-group">
+                        <label>Analysis Mode</label>
+                        <select id="analysisSelect" class="param-select">
+                            <option value="explainable">Explainable (XAI Heatmap)</option>
+                            <option value="standard">Standard Classification</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="param-group">
+                    <label>Discovery Targets (Comma Separated)</label>
+                    <input type="text" id="userInput" class="param-input" placeholder="e.g. a dog, a cat, a car, fire">
+                </div>
+                <button id="predictBtn" class="btn-predict">
+                    <span class="btn-text">INITIALIZE SCAN</span>
+                    <div class="progress-fill"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="hero-right">
+            <lottie-player 
+                src="https://assets1.lottiefiles.com/packages/lf20_tfb3estd.json"
+                background="transparent"
+                speed="1.5"
+                style="width: 100%;"
+                loop
+                autoplay>
+            </lottie-player>
+        </div>
+    </section>
+
+    <!-- Main Content Tabs Container -->
+    <main class="tabs-container" id="tabsContainer" style="display:none;">
+        
+        <!-- SCOPE TAB -->
+        <div class="tab-panel" data-panel="scope">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-12 text-center">Future Extensions & Improvements</h2>
+            
+            <div class="scope-items-group">
+                <!-- Edge & Mobile -->
+                <div class="tab-card scope-item">
+                    <div class="item-icon"><img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=400"></div>
+                    <div class="item-content">
+                        <h4 class="text-xl font-bold mb-3">Edge & Mobile Deployment</h4>
+                        <p>To transition from cloud-based inference to localized computation, we are optimizing the ViT (Vision Transformer) and RRDB (Residual-in-Residual Dense Block) backends through advanced pruning and 8-bit integer (INT8) quantization. This initiative includes providing containerized builds for Android and iOS using TensorRT and ONNX Runtime.</p>
+                    </div>
+                </div>
+
+                <!-- Multimodal -->
+                <div class="tab-card scope-item">
+                    <div class="item-icon"><img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&get=80&w=400"></div>
+                    <div class="item-content">
+                        <h4 class="text-xl font-bold mb-3">Multimodal & Domain Expansion</h4>
+                        <p>Current capabilities focus on static visual data, but our roadmap includes a major shift toward multimodal fusion. By integrating temporal feature extractors and audio encoders (such as Wav2Vec2), we aim to create a fused embedding space where CLIP can recognize events across synchronized video and audio streams effortlessly.</p>
+                    </div>
+                </div>
+
+                <!-- Self-supervision -->
+                <div class="tab-card scope-item">
+                    <div class="item-icon"><img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=400"></div>
+                    <div class="item-content">
+                        <h4 class="text-xl font-bold mb-3">Self-supervision & Continual Learning</h4>
+                        <p>To tackle the challenge of shifting data distributions, we are incorporating self-supervised pretraining mechanisms that allow the model to learn from unlabelled data streams in the background. By utilizing contrastive learning on raw input feeds, the system can refine its visual feature extractor without manual intervention periodically.</p>
+                    </div>
+                </div>
+
+                <!-- XAI -->
+                <div class="tab-card scope-item">
+                    <div class="item-icon"><img src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&q=80&w=400"></div>
+                    <div class="item-content">
+                        <h4 class="text-xl font-bold mb-3">Interpretability & Monitoring</h4>
+                        <p>Trust in AI is paramount, especially in zero-shot scenarios. We are developing a comprehensive explainability (XAI) suite that provides more than just heatmaps. This includes generating natural language justifications for every classification and utilizing concept activation vectors (CAVs) to show high-level features clearly during neural analysis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-3xl font-extrabold text-slate-900 mt-16 mb-8 text-center">System Architecture Advantages</h3>
+            <div class="vertical-stack max-w-4xl mx-auto">
+                <div class="insight-card">
+                    <h5 class="font-bold text-xl text-slate-900">1. Zero Manual Data Labeling Overheads</h5>
+                    <p class="text-slate-600 mt-2">Understands visual concepts directly from millions of web-scale text-image pairs, eliminating the bottleneck of manual dataset curation and the high costs of annotation cycles.</p>
+                </div>
+                <div class="insight-card">
+                    <h5 class="font-bold text-xl text-slate-900">2. High Semantic Input Resilience</h5>
+                    <p class="text-slate-600 mt-2">Maintains high classification accuracy even on blurry or pixelated inputs that traditional deep learning models would typically misidentify due to high sensory noise levels.</p>
+                </div>
+                <div class="insight-card">
+                    <h5 class="font-bold text-xl text-slate-900">3. Infinite Instant Category Scalability</h5>
+                    <p class="text-slate-600 mt-2">Can recognize any concept described in natural language, providing infinite flexibility across diverse industrial and scientific sectors without any retraining downtime or infrastructure costs.</p>
+                </div>
+                <div class="insight-card">
+                    <h5 class="font-bold text-xl text-slate-900">4. GAN-Integrated Neural Preprocessing</h5>
+                    <p class="text-slate-600 mt-2">Reconstructs missing textures and high-frequency details using generative architecture before semantic analysis, ensuring the encoder receives the highest possible feature density.</p>
+                </div>
+                <div class="insight-card">
+                    <h5 class="font-bold text-xl text-slate-900">5. Modular Foundation Deployment</h5>
+                    <p class="text-slate-600 mt-2">The architecture allows for instant swapping of model weights as newer visual foundation models become available, ensuring the system remains at the cutting edge of AI research.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPLICATIONS TAB -->
+        <div class="tab-panel" data-panel="applications">
+            <h2 class="text-4xl font-extrabold text-slate-900 mb-12 text-center">Industrial Impact Analysis</h2>
+            
+            <div class="tab-card app-item">
+                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1200" class="large-banner-img">
+                <div class="item-content">
+                    <h3 class="box-heading" style="color: #3b82f6;">Healthcare Imaging</h3>
+                    <h4 class="font-bold text-slate-900 text-xl">Clinical Pathological Analysis</h4>
+                    <p class="technical-matter">Our system allows medical professionals to reconstruct high-fidelity detail from low-dose or low-resolution MRI and CT scans. By utilizing the CLIP encoder's semantic understanding, the system can identify rare pathological patterns that traditional supervised models often miss due to a lack of labeled training data. This capability significantly reduces the time required for diagnostic review and aids in the early-stage detection of anomalies in challenging clinical environments.</p>
+                </div>
+            </div>
+
+            <div class="tab-card app-item">
+                <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=1200" class="large-banner-img">
+                <div class="item-content">
+                    <h3 class="box-heading" style="color: #ef4444;">Forensic Security</h3>
+                    <h4 class="font-bold text-slate-900 text-xl">Autonomous Surveillance Systems</h4>
+                    <p class="technical-matter">The integration of ESRGAN facilitates the forensic reconstruction of grainy, low-light surveillance footage, converting unusable pixels into clear evidence for identification. Coupled with zero-shot classification, the system can be instantly tasked to look for specific visual cues—such as "unattended luggage," "unauthorized personnel," or specific vehicle types—without needing to retrain or re-index the entire model globally.</p>
+                </div>
+            </div>
+
+            <div class="tab-card app-item">
+                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200" class="large-banner-img">
+                <div class="item-content">
+                    <h3 class="box-heading" style="color: #10b981;">E-Commerce Retail</h3>
+                    <h4 class="font-bold text-slate-900 text-xl">Dynamic Inventory Management</h4>
+                    <p class="technical-matter">Large-scale retailers manage dynamic inventories by automatically tagging millions of new products based on visual appearance and textual descriptions without any manual labeling efforts. This powers high-accuracy visual search engines and recommendation systems ensuring niche items are discoverable in high-traffic digital marketplaces. The ESRGAN component further ensures user photos are enhanced for better matching against catalog standards.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TECHNICAL TAB -->
+        <div class="tab-panel" data-panel="about">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-4xl font-extrabold text-slate-900 mb-6">Technical Architecture</h2>
+                <p class="text-slate-600 text-lg">A deep-dive into the hybrid neural pipeline designed for zero-shot semantic understanding and pixel-perfect generative synthesis.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-20">
+                <!-- ESRGAN Core Engine -->
+                <div class="tab-card arch-engine-card">
+                    <img src="https://images.unsplash.com/photo-1633412802994-5c058f151b66?auto=format&fit=crop&q=80&w=600" class="arch-image">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">ESRGAN Core Engine</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Utilizes Residual-in-Residual Dense Blocks (RRDB) to hallucinate high-frequency texture information. 
+                        This pre-processing phase ensures the semantic encoder receives maximum feature density from low-fidelity inputs.
+                    </p>
+                    <div class="mt-6 bg-slate-100 dark:bg-slate-900/60 rounded-xl p-4 text-sm font-mono text-blue-600 dark:text-blue-400">
+                        <div class="font-mono">// SPEC: 4x Perceptual Upscaling</div>
+                        <div class="font-mono">// LOSS: VGG Perceptual + Adversarial</div>
+                    </div>
+                </div>
+
+                <!-- CLIP Neural Alignment -->
+                <div class="tab-card arch-engine-card" style="border-color: #10b981;">
+                    <img src="https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1?auto=format&fit=crop&q=80&w=600" class="arch-image">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">CLIP Neural Alignment</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Maps high-dimensional visual vectors into a shared multi-modal latent space. 
+                        Natural language queries are encoded into the same space, allowing for direct zero-shot classification via similarity logic.
+                    </p>
+                    <div class="mt-6 bg-slate-100 dark:bg-slate-900/60 rounded-xl p-4 text-sm font-mono text-emerald-600 dark:text-emerald-400">
+                        <div class="font-mono">// PARAMS: 400M Text-Image Pairs</div>
+                        <div class="font-mono">// METRIC: Cosine Similarity Matching</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 p-12 rounded-[40px] text-white mb-20 shadow-2xl relative overflow-hidden">
+                <h3 class="text-2xl font-bold mb-12 border-l-4 border-blue-500 pl-4">The Neural Intelligence Pipeline</h3>
+                <div class="space-y-0">
+                    <div class="neural-step">
+                        <div class="step-blob">01</div>
+                        <h4 class="font-bold text-xl text-blue-400">Synthesis Phase</h4>
+                        <p class="text-slate-400 mt-2">The generative ESRGAN engine reconstructs the input frame, synthesizing edges and textures to minimize pixelation impact.</p>
+                    </div>
+                    <div class="neural-step">
+                        <div class="step-blob">02</div>
+                        <h4 class="font-bold text-xl text-emerald-400">Encoding Phase</h4>
+                        <p class="text-slate-400 mt-2">Vision Transformers (ViT) extract a dense semantic embedding from the synthesized high-resolution frame, translating pixels into math.</p>
+                    </div>
+                    <div class="neural-step">
+                        <div class="step-blob">03</div>
+                        <h4 class="font-bold text-xl text-amber-400">Alignment Phase</h4>
+                        <p class="text-slate-400 mt-2">The visual vector is compared against a dynamic set of textual prompts in real-time, outputting confidence scores.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-card flex-col">
+                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200" class="large-banner-img">
+                <div class="p-12">
+                    <h3 class="text-3xl font-extrabold text-slate-900 text-center mb-12">System Architecture Advantages</h3>
+                    <div class="vertical-stack">
+                        <div class="insight-card">
+                            <h5 class="font-bold text-xl text-slate-900">1. Zero Manual Data Labeling Overheads</h5>
+                            <p class="text-slate-600 mt-2">Understands visual concepts directly from millions of web-scale text-image pairs, eliminating the bottleneck of manual dataset curation and annotation cycles.</p>
+                        </div>
+                        <div class="insight-card">
+                            <h5 class="font-bold text-xl text-slate-900">2. High Semantic Input Resilience</h5>
+                            <p class="text-slate-600 mt-2">Maintains high classification accuracy even on blurry or pixelated inputs that traditional deep learning models would typically misidentify due to noise levels.</p>
+                        </div>
+                        <div class="insight-card">
+                            <h5 class="font-bold text-xl text-slate-900">3. Infinite Instant Category Scalability</h5>
+                            <p class="text-slate-600 mt-2">Can recognize any concept described in natural language, providing infinite flexibility across diverse industrial and scientific sectors without retraining downtime.</p>
+                        </div>
+                        <div class="insight-card">
+                            <h5 class="font-bold text-xl text-slate-900">4. GAN-Integrated Neural Preprocessing</h5>
+                            <p class="text-slate-600 mt-2">Reconstructs missing textures and high-frequency details using generative architecture before semantic analysis, ensuring maximum feature density.</p>
+                        </div>
+                        <div class="insight-card">
+                            <h5 class="font-bold text-xl text-slate-900">5. Modular Foundation Deployment</h5>
+                            <p class="text-slate-600 mt-2">The architecture allows for instant swapping of model weights as newer visual foundation models become available, ensuring the system remains at the cutting edge of AI research.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM TAB -->
+        <div class="tab-panel" data-panel="team" id="teamPanel">
+            <h2 class="team-title-cinematic">Meet Our Team</h2>
+            <<div class="text-center -mt-16 mb-20 max-w-4xl mx-auto">
+    <p class="text-lg text-gray-500 dark:text-gray-400 opacity-60">
+        A collective of passionate engineers and researchers dedicated to advancing the frontier of visual intelligence.
+    </p>
+    <p class="text-lg text-gray-500 dark:text-gray-400 opacity-60 mt-1">
+        Our synergy in machine learning, system architecture, and user experience design fuels our innovation.
+    </p>
+</div>
+            <div class="team-grid" id="teamGrid">
+                
+               <!-- PRASANNA -->
+<div class="team-member-card">
+
+    <div class="member-img-wrapper" onclick="toggleTeamMember(this)">
+        <img 
+            src="https://drive.google.com/thumbnail?id=1uuPI-pNV0347jLEl9FQNZRUHG3skpMsy&sz=w1000" 
+            alt="Prasanna"
+            class="profile-pic">
+    </div>
+
+    <div class="name-wrapper font-bold text-lg mt-4">
+        <span class="short-name">Prasanna</span>
+        <span class="full-name">Saladi Durga Prasanna</span>
+    </div>
+
+    <p class="text-xs text-blue-600 font-bold uppercase tracking-widest mt-1">
+        Lead Backend
+    </p>
+
+    <div class="member-details-overlay">
+        
+        <a href="https://www.linkedin.com/in/saladi-durga-prasanna-344269259" target="_blank" class="absolute top-10 right-10 text-blue-600 hover:text-blue-800 transition-all transform hover:scale-110 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+
+        <div class="overlay-img-side">
+            <img 
+                src="https://drive.google.com/thumbnail?id=1uuPI-pNV0347jLEl9FQNZRUHG3skpMsy&sz=w1000" 
+                alt="Prasanna"
+                class="profile-pic">
+        </div>
+
+        <div class="overlay-info-side">
+            <h3>Saladi Durga Prasanna</h3>
+            <p class="text-blue-600 font-bold uppercase tracking-widest text-sm mb-1">Lead Backend</p>
+            <p class="text-slate-500 text-sm mb-6 opacity-70">Architects robust server-side logic and manages database integration.</p>
+            
+            <div class="detail-bio grid grid-cols-1 gap-4 w-full max-w-md">
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">🎓</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Roll No</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">22A31A43D7</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">✉️</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Email</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight break-all">prasannasaladi07@gmail.com</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">📱</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Phone</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">9704341974</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+              <!-- RESHMA -->
+<div class="team-member-card">
+    
+    <div class="member-img-wrapper" onclick="toggleTeamMember(this)">
+        <img 
+            src="https://drive.google.com/thumbnail?id=1W37Kg3xeNstYb32rfriypVpTCcSkLOWp&sz=w1000" 
+            alt="Reshma"
+            class="profile-pic">
+    </div>
+
+    <div class="name-wrapper font-bold text-lg mt-4">
+        <span class="short-name">Reshma</span>
+        <span class="full-name">Aeirapu Reshma</span>
+    </div>
+
+    <p class="text-xs text-blue-600 font-bold uppercase tracking-widest mt-1">
+        Frontend Architect
+    </p>
+
+    <div class="member-details-overlay">
+        
+        <a href="https://www.linkedin.com/in/reshma-aeirapu-2a1b6a259" target="_blank" class="absolute top-10 right-10 text-blue-600 hover:text-blue-800 transition-all transform hover:scale-110 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+
+        <div class="overlay-img-side">
+            <img 
+                src="https://drive.google.com/thumbnail?id=1W37Kg3xeNstYb32rfriypVpTCcSkLOWp&sz=w1000" 
+                alt="Reshma"
+                class="profile-pic">
+        </div>
+
+        <div class="overlay-info-side">
+            <h3>Aeirapu Reshma</h3>
+            <p class="text-blue-600 font-bold uppercase tracking-widest text-sm mb-1">Frontend Architect</p>
+            <p class="text-slate-500 text-sm mb-6 opacity-70">Designs and implements highly interactive, user-centric web interfaces.</p>
+            
+            <div class="detail-bio grid grid-cols-1 gap-4 w-full max-w-md">
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">🎓</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Roll No</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">22A31A43B7</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">✉️</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Email</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight break-all">reshmaaeirapu2004@gmail.com</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">📱</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Phone</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">8341726499</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+                <!-- JAGRUTHI -->
+<div class="team-member-card">
+    
+    <div class="member-img-wrapper" onclick="toggleTeamMember(this)">
+        <img 
+            src="https://drive.google.com/thumbnail?id=1C8zUVYuQqDS97gYXYKnVAXBIjbZEPFlA&sz=w1000" 
+            alt="Jagruthi"
+            class="profile-pic">
+    </div>
+
+    <div class="name-wrapper font-bold text-lg mt-4">
+        <span class="short-name">Jagruthi</span>
+        <span class="full-name">Pullela Jagruthi</span>
+    </div>
+
+    <p class="text-xs text-blue-600 font-bold uppercase tracking-widest mt-1">
+        Lead QA
+    </p>
+
+    <div class="member-details-overlay">
+        
+        <a href="https://www.linkedin.com/in/pullela-jagruthi-b10358259" target="_blank" class="absolute top-10 right-10 text-blue-600 hover:text-blue-800 transition-all transform hover:scale-110 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+
+        <div class="overlay-img-side">
+            <img 
+                src="https://drive.google.com/thumbnail?id=1C8zUVYuQqDS97gYXYKnVAXBIjbZEPFlA&sz=w1000" 
+                alt="Jagruthi"
+                class="profile-pic">
+        </div>
+
+        <div class="overlay-info-side">
+            <h3>Pullela Jagruthi</h3>
+            <p class="text-blue-600 font-bold uppercase tracking-widest text-sm mb-1">Lead QA</p>
+            <p class="text-slate-500 text-sm mb-6 opacity-70">Ensures platform stability and performance through rigorous testing protocols.</p>
+            
+            <div class="detail-bio grid grid-cols-1 gap-4 w-full max-w-md">
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">🎓</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Roll No</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">22A31A43D5</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">✉️</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Email</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight break-all">pullelajagruthi@gmail.com</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">📱</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Phone</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">9392085931</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+                <!-- HAJEE ALI -->
+<div class="team-member-card">
+    
+    <div class="member-img-wrapper" onclick="toggleTeamMember(this)">
+        <img 
+            src="https://drive.google.com/thumbnail?id=1vdWf56j5riAD6LrotJLVKID-2r18Vb_Q&sz=w1000" 
+            alt="Hajee Ali"
+            class="profile-pic">
+    </div>
+
+    <div class="name-wrapper font-bold text-lg mt-4">
+        <span class="short-name">Hajee Ali</span>
+        <span class="full-name">HAJEE ALI MOHAMMAD</span>
+    </div>
+
+    <p class="text-xs text-blue-600 font-bold uppercase tracking-widest mt-1">
+        UX Specialist
+    </p>
+
+    <div class="member-details-overlay">
+        
+        <a href="https://www.linkedin.com/in/hajee-ali-32611a25a/" target="_blank" class="absolute top-10 right-10 text-blue-600 hover:text-blue-800 transition-all transform hover:scale-110 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+
+        <div class="overlay-img-side">
+            <img 
+                src="https://drive.google.com/thumbnail?id=1vdWf56j5riAD6LrotJLVKID-2r18Vb_Q&sz=w1000" 
+                alt="Hajee Ali"
+                class="profile-pic">
+        </div>
+
+        <div class="overlay-info-side">
+            <h3>HAJEE ALI MOHAMMAD</h3>
+            <p class="text-blue-600 font-bold uppercase tracking-widest text-sm mb-1">UX Specialist</p>
+            <p class="text-slate-500 text-sm mb-6 opacity-70">Crafts intuitive user experiences and optimizes overall digital interactions.</p>
+            
+            <div class="detail-bio grid grid-cols-1 gap-4 w-full max-w-md">
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">🎓</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Roll No</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">22A31A43F9</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">✉️</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Email</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight break-all">hajee95151@gmail.com</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">📱</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Phone</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">9515198285</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<!-- SRI RAM -->
+<div class="team-member-card">
+    
+    <div class="member-img-wrapper" onclick="toggleTeamMember(this)">
+        <img 
+            src="https://drive.google.com/thumbnail?id=1ezWmEPXSyTngaK0tXNqQNQC07_S0o2tQ&sz=w1000" 
+            alt="Sri Ram"
+            class="profile-pic">
+    </div>
+
+    <div class="name-wrapper font-bold text-lg mt-4">
+        <span class="short-name">Sri Ram</span>
+        <span class="full-name">VATHADI SRI RAM</span>
+    </div>
+
+    <p class="text-xs text-blue-600 font-bold uppercase tracking-widest mt-1">
+        ML Specialist
+    </p>
+
+    <div class="member-details-overlay">
+        
+        <a href="https://www.linkedin.com/in/sriram-vathadi-841" target="_blank" class="absolute top-10 right-10 text-blue-600 hover:text-blue-800 transition-all transform hover:scale-110 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+
+        <div class="overlay-img-side">
+            <img 
+                src="https://drive.google.com/thumbnail?id=1ezWmEPXSyTngaK0tXNqQNQC07_S0o2tQ&sz=w1000" 
+                alt="Sri Ram"
+                class="profile-pic">
+        </div>
+
+        <div class="overlay-info-side">
+            <h3>VATHADI SRI RAM</h3>
+            <p class="text-blue-600 font-bold uppercase tracking-widest text-sm mb-1">ML Specialist</p>
+            <p class="text-slate-500 text-sm mb-6 opacity-70">Develops and deploys advanced machine learning models for zero-shot recognition.</p>
+            
+            <div class="detail-bio grid grid-cols-1 gap-4 w-full max-w-md">
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">🎓</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Roll No</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">23A35A4331</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">✉️</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Email</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight break-all">sriramvathadi@gmail.com</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white/60 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-default">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl shadow-inner">📱</div>
+                    <div class="text-left flex-1">
+                        <div class="text-xs font-black text-slate-500 uppercase tracking-wider">Phone</div>
+                        <div class="text-lg font-bold text-slate-800 leading-tight">9000914583</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+            </div>
+
+            <!-- Engineering Focus Section (Restored to Team Tab) -->
+            <div class="mt-32 engineering-pillars-section">
+                <h3 class="text-2xl font-black text-slate-900 mb-12 text-center uppercase tracking-widest">🧬 Our Engineering Pillars</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="pillar-card">
+                        <div class="text-3xl mb-4">🧬</div>
+                        <h4 class="text-xl font-black text-slate-900 mb-4 tracking-tight">Zero-Shot Learning & Semantic AI</h4>
+                        <p class="text-slate-600 leading-relaxed font-medium">We design systems capable of recognizing unseen categories without task-specific retraining by leveraging large-scale vision-language embeddings.</p>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="text-3xl mb-4">🎨</div>
+                        <h4 class="text-xl font-black text-slate-900 mb-4 tracking-tight">Generative Enhancement (ESRGAN)</h4>
+                        <p class="text-slate-600 leading-relaxed font-medium">Our pipeline enhances low-resolution inputs using advanced super-resolution techniques to ensure high-frequency details are reconstructed.</p>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="text-3xl mb-4">🔗</div>
+                        <h4 class="text-xl font-black text-slate-900 mb-4 tracking-tight">Vision-Language Alignment</h4>
+                        <p class="text-slate-600 leading-relaxed font-medium">We integrate visual encoders with language models to create a shared embedding space for real-time semantic similarity matching.</p>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="text-3xl mb-4">🔍</div>
+                        <h4 class="text-xl font-black text-slate-900 mb-4 tracking-tight">Explainable AI (XAI)</h4>
+                        <p class="text-slate-600 leading-relaxed font-medium">Transparency is central to our architecture, providing interpretable outputs like heatmaps and confidence scoring to show decision pathways.</p>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="text-3xl mb-4">⚙</div>
+                        <h4 class="text-xl font-black text-slate-900 mb-4 tracking-tight">Scalable Modular Architecture</h4>
+                        <p class="text-slate-600 leading-relaxed font-medium">The system is built with modular components that allow seamless upgrades and adaptability across different industries and datasets.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- LIVE NEURAL BACKGROUND ---
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleCount = 100; // Visibility 70%
+        const maxDistance = 180;
+        const interactionRadius = 220; 
+        let mouse = { x: -1000, y: -1000 };
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                particles.push({
+                    x: x, y: y, baseX: x, baseY: y,
+                    vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+                    size: Math.random() * 2.5 + 1, displacementX: 0, displacementY: 0
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.baseX += p.vx; p.baseY += p.vy;
+                if (p.baseX < 0 || p.baseX > canvas.width) p.vx *= -1;
+                if (p.baseY < 0 || p.baseY > canvas.height) p.vy *= -1;
+                const dx = mouse.x - p.baseX; const dy = mouse.y - p.baseY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < interactionRadius) {
+                    const force = (interactionRadius - distance) / interactionRadius;
+                    p.displacementX = (dx / distance) * force * -25;
+                    p.displacementY = (dy / distance) * force * -25;
+                    ctx.fillStyle = `rgba(37, 99, 235, ${0.4 + force * 0.4})`;
+                } else {
+                    p.displacementX *= 0.94; p.displacementY *= 0.94;
+                    ctx.fillStyle = 'rgba(37, 99, 235, 0.45)';
+                }
+                p.x = p.baseX + p.displacementX; p.y = p.baseY + p.displacementY;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let lineDx = p.x - p2.x; let lineDy = p.y - p2.y;
+                    let lineDist = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+                    if (lineDist < maxDistance) {
+                        ctx.strokeStyle = `rgba(37, 99, 235, ${(1 - lineDist / maxDistance) * 0.35})`;
+                        ctx.lineWidth = (1.5 - lineDist / maxDistance);
+                        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('resize', initCanvas);
+        initCanvas(); draw();
+
+        // --- APPLICATIONS PARALLAX LOGIC ---
+        function initApplicationsParallax() {
+            const appItems = document.querySelectorAll('.app-item');
+            appItems.forEach(item => {
+                const img = item.querySelector('.large-banner-img');
+                item.addEventListener('mousemove', (e) => {
+                    const rect = item.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const moveX = ((x / rect.width) - 0.5) * 30;
+                    const moveY = ((y / rect.height) - 0.5) * 30;
+                    img.style.transform = `scale(1.1) translate(${moveX}px, ${moveY}px)`;
+                });
+                item.addEventListener('mouseleave', () => {
+                    img.style.transform = `scale(1.1) translate(0, 0)`;
+                });
+            });
+        }
+
+        // --- TEAM INTERACTION ---
+        function toggleTeamMember(wrapper) {
+            const card = wrapper.closest('.team-member-card');
+            const panel = document.getElementById('teamPanel');
+            const isActive = card.classList.contains('active');
+            document.querySelectorAll('.team-member-card').forEach(c => c.classList.remove('active'));
+            panel.classList.remove('has-active');
+            if (!isActive) { card.classList.add('active'); panel.classList.add('has-active'); }
+        }
+
+        function closeResults() {
+            const overlay = document.getElementById('resultsOverlay');
+            overlay.classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const wrappers = document.querySelectorAll('.member-img-wrapper');
+            const panel = document.getElementById('teamPanel');
+            wrappers.forEach(w => {
+                const card = w.closest('.team-member-card');
+                w.addEventListener('mouseenter', () => {
+                    document.querySelectorAll('.team-member-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active'); panel.classList.add('has-active');
+                });
+            });
+            document.querySelectorAll('.team-member-card').forEach(card => {
+                card.addEventListener('mouseleave', () => { card.classList.remove('active'); panel.classList.remove('has-active'); });
+            });
+
+            initApplicationsParallax();
+        });
+
+        // --- TAB NAVIGATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.nav-link');
+            const panels = document.querySelectorAll('.tab-panel');
+            const heroSection = document.getElementById('heroSection');
+            const tabsContainer = document.getElementById('tabsContainer');
+            const introOverlay = document.getElementById('teamIntroOverlay');
+            const siteEntranceOverlay = document.getElementById('entranceOverlay');
+
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    siteEntranceOverlay.style.opacity = '0';
+                    setTimeout(() => { siteEntranceOverlay.style.display = 'none'; }, 1000);
+                }, 2800);
+            });
+
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    const target = link.dataset.tab;
+                    if (link.classList.contains('active')) return;
+                    if(target === 'team') {
+                        introOverlay.style.display = 'flex';
+                        setTimeout(() => introOverlay.classList.add('active'), 10);
+                        heroSection.style.display = 'none'; tabsContainer.style.display = 'none';
+                        setTimeout(() => {
+                            introOverlay.style.opacity = '0';
+                            setTimeout(() => {
+                                introOverlay.style.display = 'none'; introOverlay.classList.remove('active'); introOverlay.style.opacity = '1';
+                                links.forEach(l => l.classList.remove('active')); link.classList.add('active');
+                                panels.forEach(p => p.classList.toggle('visible', p.dataset.panel === target));
+                                tabsContainer.style.display = 'block';
+                            }, 600);
+                        }, 2200);
+                    } else {
+                        links.forEach(l => l.classList.remove('active')); link.classList.add('active');
+                        panels.forEach(p => p.classList.toggle('visible', p.dataset.panel === target));
+                        if(target === 'home') { heroSection.style.display = 'grid'; tabsContainer.style.display = 'none'; }
+                        else { heroSection.style.display = 'none'; tabsContainer.style.display = 'block'; }
+                    }
+                    window.scrollTo(0,0);
+                });
+            });
+
+            // --- IMAGE UPLOAD LOGIC ---
+            const uploadZone = document.getElementById('uploadZone');
+            const imageInput = document.getElementById('imageInput');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const uploadIcon = document.getElementById('uploadIcon');
+            const predictBtn = document.getElementById('predictBtn');
+            const resultsOverlay = document.getElementById('resultsOverlay');
+            const newScanBtn = document.getElementById('newScanBtn');
+            let selectedImageURL = null;
+
+            function handleFile(file) {
+                if (file && file.type.startsWith('image/')) {
+                    uploadStatus.textContent = `Image Selected: ${file.name}`;
+                    uploadIcon.textContent = "✅";
+                    uploadZone.style.borderColor = "#fbbf24";
+                    selectedImageURL = URL.createObjectURL(file);
+                } else {
+                    uploadStatus.textContent = "Invalid file type. Please upload an image.";
+                    uploadIcon.textContent = "❌";
+                    uploadZone.style.borderColor = "#ef4444";
+                }
+            }
+
+            uploadZone.onclick = () => imageInput.click();
+            imageInput.onchange = (e) => handleFile(e.target.files[0]);
+
+            newScanBtn.onclick = () => {
+                // Close Overlay
+                resultsOverlay.classList.remove('active');
+                
+                // Reset Input State
+                imageInput.value = '';
+                selectedImageURL = null;
+                uploadStatus.textContent = "Neural Core: Drag Image to Analyze";
+                uploadIcon.textContent = "📁";
+                uploadZone.style.borderColor = "rgba(255,255,255,0.5)";
+            };
+
+            predictBtn.onclick = async () => {
+                if (!selectedImageURL) {
+                    uploadStatus.textContent = "Please select an image first!";
+                    uploadStatus.style.color = "#fbbf24";
+                    return;
+                }
+                
+                const btnText = predictBtn.querySelector('.btn-text');
+                const progressFill = predictBtn.querySelector('.progress-fill');
+                const originalText = btnText.textContent;
+                
+                predictBtn.disabled = true;
+                predictBtn.classList.add('loading');
+                btnText.textContent = "INITIALIZING...";
+                
+                // Cinematic Button Animation
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    if(progress < 90) progress += Math.random() * 5;
+                    progressFill.style.width = `${progress}%`;
+                    if(progress > 30 && progress < 60) btnText.textContent = "SYNTHESIZING...";
+                    if(progress >= 60) btnText.textContent = "ALIGNING VECTORS...";
+                }, 100);
+
+                const formData = new FormData();
+                const fileInput = document.getElementById('imageInput');
+                const targetsInput = document.getElementById('userInput').value;
+                const enhancement = document.getElementById('enhancementSelect').value;
+                const analysisMode = document.getElementById('analysisSelect').value;
+
+                formData.append('file', fileInput.files[0]);
+                formData.append('custom_labels', targetsInput);
+                formData.append('enhancer', enhancement);
+                formData.append('mode', analysisMode);
+
+                try {
+                    const response = await fetch('/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
+                        throw new Error(errorData.error);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    // Finish Animation
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '100%';
+                    btnText.textContent = "COMPLETE";
+                    predictBtn.classList.add('success');
+                    await new Promise(r => setTimeout(r, 800));
+
+                    // Open Cinematic Results
+                    resultsOverlay.classList.add('active');
+                    
+                    // Set Image
+                    document.getElementById('result-img').src = data.processed_image;
+
+                    const predictions = data.predictions || [];
+
+                    if (predictions.length > 0) {
+                        const topPrediction = predictions[0];
+                        const confidence = parseFloat(topPrediction.score).toFixed(1);
+
+                        // Populate Primary Detection
+                        document.getElementById('top-label').textContent = topPrediction.label;
+                        document.getElementById('confidence-text').textContent = confidence + "%";
+                        document.getElementById('confidence-bar-fill').style.width = confidence + "%";
+
+                        // Populate Predictions List
+                        const predsList = document.getElementById('predictions-list');
+                        predsList.innerHTML = ''; // Clear previous
+                        
+                        predictions.slice(0, 5).forEach(pred => {
+                            const row = document.createElement('div');
+                            row.className = 'flex items-center justify-between p-2 bg-slate-800/50 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors';
+                            row.innerHTML = `
+                                <span class="text-slate-300 font-medium text-xs uppercase tracking-wide">${pred.label}</span>
+                                <span class="text-blue-400 font-mono font-bold">${parseFloat(pred.score).toFixed(2)}%</span>
+                            `;
+                            predsList.appendChild(row);
+                        });
+                    } else {
+                        // Handle case with no predictions
+                        document.getElementById('top-label').textContent = "NO PREDICTION";
+                        document.getElementById('confidence-text').textContent = "0%";
+                        document.getElementById('confidence-bar-fill').style.width = "0%";
+                        document.getElementById('predictions-list').innerHTML = '<p class="text-slate-400 text-center">Could not identify any labels in the image.</p>';
+                    }
+
+                    // Heatmap Toggle Logic
+                    const heatmapBtn = document.getElementById('toggle-heatmap');
+                    const heatmapOverlay = document.getElementById('heatmap-overlay');
+                    
+                    // Reset heatmap state
+                    heatmapOverlay.classList.add('hidden');
+                    heatmapOverlay.style.filter = "none";
+                    heatmapOverlay.src = "";
+                    heatmapBtn.classList.remove('bg-blue-600', 'text-white');
+                    heatmapBtn.innerHTML = "<span>👁‍🗨</span> SHOW X-RAY (HEATMAP)";
+
+                    if (data.heatmap_url) {
+                        heatmapBtn.disabled = false;
+                        heatmapBtn.onclick = () => {
+                            heatmapOverlay.src = data.heatmap_url;
+                            heatmapOverlay.classList.toggle('hidden');
+                            heatmapOverlay.style.opacity = heatmapOverlay.classList.contains('hidden') ? 0 : 0.7;
+                            heatmapBtn.innerHTML = heatmapOverlay.classList.contains('hidden') 
+                                ? "<span>👁‍🗨</span> SHOW X-RAY (HEATMAP)" 
+                                : "<span>❌</span> HIDE X-RAY";
+                        };
+                    } else {
+                        heatmapBtn.disabled = true;
+                        heatmapBtn.innerHTML = "<span>🚫</span> X-RAY UNAVAILABLE";
+                    }
+
+                } catch (error) {
+                    clearInterval(progressInterval);
+                    console.error("Analysis failed:", error);
+                    alert("Error analyzing image: " + error.message);
+                    location.reload();
+                } finally {
+                    predictBtn.disabled = false;
+                    predictBtn.classList.remove('loading');
+                    predictBtn.classList.remove('success');
+                    btnText.textContent = originalText;
+                    progressFill.style.width = '0%';
+                }
+            };
+
+            // --- THEME TOGGLE LOGIC ---
+            const themeToggle = document.getElementById('themeToggle');
+            const toggleIcon = document.getElementById('toggleIcon');
+            const overlay = document.getElementById('modeTransitionOverlay');
+            
+            themeToggle.onclick = () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                overlay.style.backgroundColor = isDark ? '#f8fafc' : '#0f172a';
+                overlay.classList.remove('exiting');
+                overlay.classList.add('active');
+                setTimeout(() => {
+                    document.documentElement.classList.toggle('dark');
+                    toggleIcon.textContent = isDark ? '🌙' : '☀️';
+                    setTimeout(() => {
+                        overlay.classList.add('exiting');
+                        setTimeout(() => { overlay.classList.remove('active', 'exiting'); }, 700);
+                    }, 50);
+                }, 400);
+            };
+        });
+    </script>
+</body>
+</html>cript>
+</body>
+</html>

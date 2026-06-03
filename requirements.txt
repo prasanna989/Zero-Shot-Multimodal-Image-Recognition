@@ -1,0 +1,15 @@
+flask
+torch
+torchvision
+torchaudio
+ftfy
+regex
+tqdm
+git+https://github.com/openai/CLIP.git
+basicsr
+realesrgan
+numpy
+opencv-python
+pillow
+matplotlib
+grad-cam
