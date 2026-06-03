@@ -136,7 +136,7 @@ The project demonstrates how image super-resolution and multimodal learning can 
 
 \## Author
 
-\*\*Prasanna Saladi\*\*
+Saladi Durga Prasanna
 
 
 
